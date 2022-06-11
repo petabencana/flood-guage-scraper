@@ -3,10 +3,9 @@
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
-import psycopg2
 
 def save_data(payload):
-    invoke_response = lambda_client.invoke(FunctionName="another_lambda_",
+    invoke_response = lambda_client.invoke(FunctionName="arn:aws:lambda:ap-southeast-1:803326344021:function:Persist_Floog_Guage_info_to_DB",
                                             InvocationType='Event',
                                             Payload=json.dumps(msg))
     print(invoke_response)
@@ -110,8 +109,8 @@ def lambda_handler(event, context) :
     #         print(table);
     #     con.commit();
     #     con.close();
-    # except Exception as e:
-    #     print("Exception in function" , e)
+    except Exception as e:
+        print("Exception in function" , e)
 
 def get_level_data(row):
     level_data = {}
