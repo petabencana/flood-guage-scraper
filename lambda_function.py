@@ -5,7 +5,14 @@ import requests
 import pandas as pd
 import psycopg2
 
+def save_data(payload):
+    invoke_response = lambda_client.invoke(FunctionName="another_lambda_",
+                                            InvocationType='Event',
+                                            Payload=json.dumps(msg))
+    print(invoke_response)
+
 def lambda_handler(event, context) :
+    lambda_client = boto3_client('lambda')
     try:
         url="http://poskobanjirdsda.jakarta.go.id/xmldata.xml"
         xml=requests.get(url) #get the data
@@ -37,8 +44,7 @@ def lambda_handler(event, context) :
             print("The row data is" , row)
             level_data = get_level_data(row)
 
-            
-            output.append({"gaugeId":row['Floodgates'],
+            gauge_data = {"gaugeId":row['Floodgates'],
                         "deviceId":row['Station_Code'],
                         "gaugeNameId":row['Floodgates_name'],
                         "reportType":row['Location'],
@@ -56,54 +62,56 @@ def lambda_handler(event, context) :
                         "warningNameEn" : level_data['warningnameen'],
                         "warningNameId" : level_data['warningnameid'],
                         "warningNameJp" : level_data['warningnamejp'],
-                        })
-        #connect to database
-        try:
-            con = psycopg2.connect(
-                    host = "petabencana.caaxg6zgploo.ap-southeast-1.rds.amazonaws.com",
-                    database = "cognicity_dev",
-                    user = "postgres",
-                    password = "u5tRWcPPx8KO")
-            # con = psycopg2.connect(
-            #         host = "127.0.0.1",
-            #         database = "cognicity",
-            #         user = "postgres",
-            #         password = "postgres")
-        except Exception as e:
-            print("Connection errror" , e)
-        cur = con.cursor()
+                        }
+            save_data(gauge_data)
 
-        try:
-            cur.executemany(
-                "INSERT INTO floodgauge.reports(gaugeid,measuredatetime, depth, deviceid, reporttype,level,  notificationflag, gaugenameid,gaugenameen,gaugenamejp,warninglevel,warningnameid,warningnameen,warningnamejp,observation_comment)"
-                "VALUES(%(gaugeId)s,%(measureDateTime)s,%(depth)s,%(deviceId)s,%(reportType)s,%(level)s,1,%(gaugeNameId)s,%(gaugeNameId)s,%(gaugeNameId)s,%(warningLevel)s,%(warningNameId)s,%(warningNameEn)s,%(warningNameJp)s,0);",output
-            )
-            sql1 = '''select * from floodgauge.reports;'''
-            cur.execute(sql1)
-        except Exception as e:
-            print("Execution error" , e)
+    #     #connect to database
+    #     try:
+    #         con = psycopg2.connect(
+    #                 host = "petabencana.caaxg6zgploo.ap-southeast-1.rds.amazonaws.com",
+    #                 database = "cognicity_dev",
+    #                 user = "postgres",
+    #                 password = "u5tRWcPPx8KO")
+    #         # con = psycopg2.connect(
+    #         #         host = "127.0.0.1",
+    #         #         database = "cognicity",
+    #         #         user = "postgres",
+    #         #         password = "postgres")
+    #     except Exception as e:
+    #         print("Connection errror" , e)
+    #     cur = con.cursor()
 
-        for i in cur.fetchall():
-            print(i)
-        con.commit()
-        con.close()
+    #     try:
+    #         cur.executemany(
+    #             "INSERT INTO floodgauge.reports(gaugeid,measuredatetime, depth, deviceid, reporttype,level,  notificationflag, gaugenameid,gaugenameen,gaugenamejp,warninglevel,warningnameid,warningnameen,warningnamejp,observation_comment)"
+    #             "VALUES(%(gaugeId)s,%(measureDateTime)s,%(depth)s,%(deviceId)s,%(reportType)s,%(level)s,1,%(gaugeNameId)s,%(gaugeNameId)s,%(gaugeNameId)s,%(warningLevel)s,%(warningNameId)s,%(warningNameEn)s,%(warningNameJp)s,0);",output
+    #         )
+    #         sql1 = '''select * from floodgauge.reports;'''
+    #         cur.execute(sql1)
+    #     except Exception as e:
+    #         print("Execution error" , e)
+
+    #     for i in cur.fetchall():
+    #         print(i)
+    #     con.commit()
+    #     con.close()
 
 
-        #connect to database
-        con = psycopg2.connect(
-                    host = "petabencana.caaxg6zgploo.ap-southeast-1.rds.amazonaws.com",
-                    database = "cognicity_dev",
-                    user = "postgres",
-                    password = "u5tRWcPPx8KO")
-        cur = con.cursor()
+    #     #connect to database
+    #     con = psycopg2.connect(
+    #                 host = "petabencana.caaxg6zgploo.ap-southeast-1.rds.amazonaws.com",
+    #                 database = "cognicity_dev",
+    #                 user = "postgres",
+    #                 password = "u5tRWcPPx8KO")
+    #     cur = con.cursor()
 
-        out= cur.execute("SELECT * FROM floodgauge.reports")
-        for table in cur.fetchall():
-            print(table);
-        con.commit();
-        con.close();
-    except Exception as e:
-        print("Exception in function" , e)
+    #     out= cur.execute("SELECT * FROM floodgauge.reports")
+    #     for table in cur.fetchall():
+    #         print(table);
+    #     con.commit();
+    #     con.close();
+    # except Exception as e:
+    #     print("Exception in function" , e)
 
 def get_level_data(row):
     level_data = {}
