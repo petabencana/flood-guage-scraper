@@ -36,6 +36,7 @@ def lambda_handler(event, context) :
         for index, row in df.iterrows():
             print("The row data is" , row)
             level_data = get_level_data(row)
+
             
             output.append({"gaugeId":row['Floodgates'],
                         "deviceId":row['Station_Code'],
