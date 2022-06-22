@@ -1,3 +1,4 @@
-beautifulsoup
-pandas
+beautifulsoup4
 requests
+boto3
+lxml
